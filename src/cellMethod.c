@@ -4,7 +4,7 @@ BOMC - Monte Carlo based generator of defect-free amorphous samples of Si and Si
 If you publish research done using Bomc then you are kindly asked to cite: 
  S. von Alfthan, A. Kuronen, and K. Kaski, Phys. Rev. B 68, 073203 (2003).
 
-Copyright Sebastian von Alfthan  galfthan@iki.fi 2002, 2003, 2014.
+Copyright Sebastian von Alfthan  (galfthan at iki dot fi) 2002, 2003, 2014.
 
 This file is part of Bomc.	 
 

@@ -2,7 +2,8 @@ Bomc
 ====
 
 BOMC is a Monte Carlo based generator of defect-free amorphous samples
-of Si and SiO2. 
+of Si and SiO2, written by Sebastian von Alfthan (galfthan at iki dot fi).
+
 
 If you publish research where Bomc has been utilized then you are
 kindly asked to cite: S. von Alfthan, A. Kuronen, and K. Kaski,

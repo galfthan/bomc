@@ -1,0 +1,44 @@
+// Tolerance values
+ full_tolerance 1e-7
+ part_tolerance 1e-7
+
+ part_enlargeInterval 1
+ part_enlargements 1
+ part_enlTreshold 0.000001
+
+
+ initPart_doInitPart 1
+ initPart_doPartCg  0
+ initPart_doFullCg  1
+ initPart_part_enlargeInterval 3
+ initPart_part_enlargements 8
+ initPart_part_enlTreshold 0.0000001
+
+
+//is the CG minimization allowed to be adaptive (full 1D minimization is not always done)
+
+ full_allowAdaptive         0
+ part_allowAdaptive         0
+ initpartpart_allowAdaptive 0
+
+
+
+// parameters for optimization
+
+ full_optim_startIteration 2
+
+ full_optim_on 1
+ part_optim_on 1
+ initPart_part_optim_on 1	
+
+ full_optim_c 5e-5
+ part_optim_c  2e-5
+ initPart_part_optim_c  5e-5
+
+ full_optim_checkInterval 1000000
+ part_optim_checkInterval 1000000
+ initPart_part_optim_checkInterval 100000
+
+ 
+
+ 

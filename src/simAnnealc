@@ -1,0 +1,134 @@
+#include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <memory.h>
+#include "shared.h"
+#include "conjgrad.h"
+#include "fileio.h"
+#include "potentialVff.h"
+#include "nrMinSubs.h"
+#include "mcSubs.h"
+#include "randFunc.h"
+
+
+double simAnneal(struct systemPos pos,struct parameters *par){
+  int i,j,k,l;
+  int atomi;
+  double maxStep;
+  int  accepted;
+    
+  double orgKt;
+  
+  static int firsttime=1;
+  static double finalKt; 
+  static double startKt; 
+  static int finalCgStep;
+  static double scaleFact;
+  static int kMax;
+  static double wantedAccProb;
+
+  double pot;
+
+  double newPos[3];
+  double oldPos[3];
+  double dr[3];
+
+  double oldPot;
+  double newPot;
+  double meanPot=0;
+  double forceNew[3];
+  double forceOld[3];
+
+
+  if(firsttime){
+	 int error=0;
+	 double temp;
+	 firsttime=0;
+	 
+	 openParameterFile("simAnneal.par");
+	 error+=getParValue("finalKt",&finalKt,"%lf"); 
+	 error+=getParValue("startKt",&startKt,"%lf"); 
+	 error+=getParValue("finalCgStep",&finalCgStep,"%d");
+	 error+=getParValue("scaleFact",&scaleFact,"%lf");
+	 error+=getParValue("steps_per_nAtoms_at_kT",&temp,"%lf");
+	 error+=getParValue("wanted_acceptance_probability",&wantedAccProb,"%lf");
+	 closeParameterFile();
+	 if(error){
+		printf("could not read needed parameters for simAnneal\n");
+		exit(0);
+	 } 
+	 startKt*=EV;
+	 finalKt*=EV;
+	 kMax=(int)(temp*pos.nAtoms);
+	}
+
+  
+  
+
+  resetOnePotVff(par,pos);
+  
+  orgKt=par->kT;
+  par->kT=startKt/scaleFact;
+
+  maxStep=0.5; //hardcoded but shouldn't matter very much, it will soon adapt anyway..*/
+  accepted=0;	
+  i=0; //i measures how many steps we have gone
+
+  while(par->kT>finalKt){
+	 i++;
+		par->kT*=scaleFact;
+	 //printf("%g maxStep %g\n",par->kT*TOEV,maxStep);
+		for(k=0;k<kMax;k++){
+		  do
+			 atomi=(int)(randNum(1)*pos.nAtoms);
+		  while(randNum(1)<0.3 || pos.aFlag==QUARTZ_FLAG); /* bias toward the quartz part */
+			 
+		  
+		  oldPos[0]=pos.x[atomi];
+		  oldPos[1]=pos.y[atomi];
+		  oldPos[2]=pos.z[atomi];
+		  //		if(i%pos.nAtoms==0)
+		  // printf("%.10g\n",forcesVff(par,pos,0)*TOEV);
+		
+		/* ltes calculate drx,dry,drz */
+		oldPot=onePotVff(par,pos,atomi,oldPos,forceOld,0);
+		for(j=0;j<3;j++) dr[j]=maxStep*2.0*(0.5-randNum(1));
+		/* we have calculated our dr, update newPos */
+		for(j=0;j<3;j++) newPos[j]=oldPos[j]+dr[j];
+
+		/* make sure its periodic */
+		for(j=0;j<3;j++) if(par->periodic[j])
+		  MAKEPERIODIC_DEF_DIM(newPos[j],-par->hBox[j],par->hBox[j],par->box[j]);
+		
+		/* new potential and force*/
+		newPot=onePotVff(par,pos,atomi,newPos,forceNew,0);
+		
+		/* see if we allow it */
+		if(randNum(1)<accProbNVT(par,newPot-oldPot,0)){ /*move accepted*/
+		  pos.x[atomi]= newPos[0];
+		  pos.y[atomi]= newPos[1];
+		  pos.z[atomi]= newPos[2];
+		  accepted++;
+		}
+		
+		}
+		
+	 
+		if( accepted>i*kMax*wantedAccProb)
+		  maxStep*=1.1;
+		else
+		  maxStep*=0.9;
+	 
+	 //fprintf(stderr,"maxStep %g\n",maxStep);
+	 
+  }
+  par->kT=orgKt;
+
+  if(finalCgStep){
+	 double newpot;
+	 conjGrad(pos,par,&i,&newpot,0,1.0,1.0,forcesVff); /*minimize energy*/
+	 return newpot;
+  }
+
+  return forcesVff(par,pos,0);
+}

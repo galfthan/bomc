@@ -1,0 +1,61 @@
+includeKeatingPot   2
+includeRingPot      0
+includeRepPot       1
+includeSuboxidePot  0
+includeDanglbondPot 0
+includeSnnRep       0
+
+
+//parameter for keatingPot type 1 (original keating)
+kp1_kStretch_SiSi 0.20133544590312  0.10066772295156  //alpha=2.965
+kp1_kStretch_SiO  1.82856729
+kp1_kBend_SiSiSi  0.05738060208239 // beta=0.285*alpha
+kp1_kBend_SiOSi   0.4876179
+kp1_kBend_OSiO    1.340949
+kp1_r0_SiSi   2.35
+kp1_r0_SiO    1.6
+kp1_cos0_Si  -0.333333333333333333  =109.x deg
+kp1_cos0_O    -0.90031877       =154.2 deg
+
+//parameters for keating type 2 ("simplified" keating)
+//th
+skp2_kStretch_SiSi  9.08 
+skp2_kStretch_SiO   27.0
+skp2_kBend_SiSiSi   3.58
+skp2_kBend_SiOSi    2.0
+skp2_kBend_OSiO     4.32
+skp2_r0_SiSi   2.35
+skp2_r0_SiO    1.6
+skp2_cos0_Si  -0.333333333333  =109.x deg
+skp2_cos0_O   -1.0       =143 deg
+
+stix_D      4.575026610  //7.33E0
+stix_beta   2.0
+stix_r0     1.60429
+stix_galpha 2.42794727330000  //3.89E0
+stix_alpha0 1.9106119         //109.47 deg
+stix_gL      2.73378124860000 //4.38E0
+stix_L0     3.0325
+stix_A      4.718581333200000e+06 //7.5e6 E0
+stix_b      0.14
+stix_rc     2.5
+stix_gamma  20
+
+
+repulsive_r0 2.6    //this is second nearest ngbr distance
+repulsive_k  0.8
+
+SubOxidePenalty+0 0.0
+SubOxidePenalty+1 0.47
+SubOxidePenalty+2  0.51
+SubOxidePenalty+3 0.24
+SubOxidePenalty+4 0.00
+
+
+ringPenalty3 0.24
+ringPenalty2 1.0
+
+
+
+
+

@@ -1,0 +1,86 @@
+simulationType 0
+seed 1010010 //seed for RNG 
+
+// randomization, how many switches is made to randomize system (in units of nAtoms)
+rand_iter    0.5
+
+
+//These variables affect the annealing 
+startKt 0.5
+endKt   0.05
+annealScale  0.95
+annealLength  100   //unit is in atoms
+startAnneal  0 
+
+
+
+//select input,file/crete 
+//	file means it reads in the input from a file,
+// create means it creates a system (see further down)
+input create
+//if input is create
+//sys_name can be Si, SiO2, SiO, Sirand, SiO2rand, SiOrand
+sys_name  SiO2
+density   0.0662     // typical  cSi: 0.05196647260756
+	          	     //           cSiO2 	(alphaQuartz) 0.0796
+		             //  	         aSi    0.044-0.054,0.054 typical
+		            //             aSiO2  0.0662
+	  
+//the box size (Angstroms) will be adjusted to fit the densityandlattice but will be as close as possible 
+//to the values given here
+create_box_x  20 
+create_box_y  20
+create_box_z  20
+
+
+outfile_name out.xyz    //the name and format of the output file of the system 
+outfile_format   xyz   
+result_period    5.0  //tells how often output file is written (in units of natoms)
+
+
+
+interfaceSystem 0  //  0= all Amorph 1=Quartz&si system 2=12 A at edges in x dir are cryst,rest amorph
+
+//if input is file
+infile_name   in.pdb
+infile_format pdb
+box_x 300 //if pdb these will be read in from remark section (if it 
+exists)
+box_y 300
+box_z 300
+
+createBonds 1  //create (1) or read (0) in bonds
+removeLongBonds 1
+bondCreationR0 2.7
+inBondFile     in.bonds
+
+
+//the skin the potentials use. 
+skin 1.0
+
+//The periodicity. 
+periodic_x 1
+periodic_y 1
+periodic_z 1
+
+volstep_prob     0.0    //probablitiy for volstep (and not bond step)
+volstep_start_kT 1.0 //max temperature at which the system is simulated in  NPT ensemble.
+pressure 100.0       //pressure in NPT ensemble (in kPa)
+varVol_x 1           //in which directions is the volume allowed to fluctuate
+varVol_y 1
+varVol_z 1
+
+
+//the probablities for different bondsteps
+
+bondSwitchProb    1
+oxygenDiffuseProb 0
+bondDiffuseProb   0
+bondBreakProb     0
+bondCreateProb    0
+
+checkPotential 0 //if on then the program just makes sure that the force and potential are correct with respect to each other
+checkBulkmodulus 0
+calculateDynMatrix 0
+breakRings 0 
+

@@ -19,7 +19,10 @@ and the two example cases, to understand how it operates. The
 [article](http://lib.tkk.fi/Diss/2006/isbn9512285401/article2.pdf)
 mentioned above, and my
 [thesis](http://lib.tkk.fi/Diss/2006/isbn9512285401/isbn9512285401.pdf)
-also describes in some details the algorithms implemented in the code.
+also describes in some details the method. A more detailed discussion
+of the optimized algorithms implemented in the code is available from
+epaps: [Optimization of the
+WWW-method](ftp://ftp.aip.org/epaps/phys_rev_b/E-PRBMDO-68-090327/epaps.pdf).
 
 
 ## Compiling:

@@ -22,8 +22,7 @@ mentioned above, and my
 also describes in some details the method. A more detailed discussion
 of the optimized algorithms implemented in the code is available from
 epaps: [Optimization of the
-WWW-method](ftp://ftp.aip.org/epaps/phys_rev_b/E-PRBMDO-68-090327/epaps.pdf).
-
+WWW-method](http://netserver.aip.org/epaps/phys_rev_b/E-PRBMDO-68-090327/epaps.pdf)
 
 ## Compiling:
 

@@ -8,15 +8,18 @@ of Si and SiO2, written by Sebastian von Alfthan (galfthan at iki dot fi).
 If you publish research where Bomc has been utilized then you are
 kindly asked to cite: "Realistic models of amorphous silica: A
 comparative study of different potentials", S. von Alfthan,
-A. Kuronen, and K. Kaski, Phys. Rev. B 68, 073203 (2003). ([pdf](lib.tkk.fi/Diss/2006/isbn9512285401/article2.pdf))
+A. Kuronen, and K. Kaski, Phys. Rev. B 68, 073203
+(2003). ([pdf](http://lib.tkk.fi/Diss/2006/isbn9512285401/article2.pdf))
 
 
 
 The code was developed as a personal research code in 2002 - 2003, and
 thus there is little documentation. It is best to look at the code,
-and the two example cases, to understand how it operates. The article
-mentioned above also describes in some details the algorithms
-implemented in the code.
+and the two example cases, to understand how it operates. The
+[article](http://lib.tkk.fi/Diss/2006/isbn9512285401/article2.pdf)
+mentioned above, and my
+[thesis](http://lib.tkk.fi/Diss/2006/isbn9512285401/isbn9512285401.pdf)
+also describes in some details the algorithms implemented in the code.
 
 
 ## Compiling:

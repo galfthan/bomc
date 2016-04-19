@@ -231,6 +231,14 @@ void readParameterFile(int argc,char *argv[]){
       createIbcLattice(boxx,boxy,boxz,1,0,1,density,&pos,&par); 
       haveSys=1;
     } 
+    if(strcmp(sys,"SiOx")==0){
+      double ratio;
+      error+=getParValue("oxygen_ratio", &ratio, "%lf");
+      printf("ratio is %g\n", ratio);
+      
+      createIbcLattice(boxx,boxy,boxz,1,0,ratio,density,&pos,&par); 
+      haveSys=1;
+    } 
 
     if(strcmp(sys,"Sirand")==0){
       createRandLattice(boxx,boxy,boxz,density,1,1,1,&pos,&par);

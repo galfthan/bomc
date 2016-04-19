@@ -19,7 +19,7 @@ startAnneal  0
 // create means it creates a system (see further down)
 input create
 //if input is create
-//sys_name can be Si, SiO2, SiO, Sirand, SiO2rand, SiOrand
+//sys_name can be Si, SiO2, SiOx, Sirand, SiO2rand, SiOrand
 sys_name  SiO2
 density   0.0662     // typical  cSi: 0.05196647260756
 	          	     //           cSiO2 	(alphaQuartz) 0.0796

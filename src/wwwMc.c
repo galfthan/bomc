@@ -122,8 +122,13 @@ int mcSimulation(struct systemPos pos,struct parameters *par,struct simuPar *sim
     sres.trialMoves[i]=0;				  /* how many trial moves */
     sres.accTrialMoves[i]=0;			  /* hom many of the trial moves we are abel to try */
     sres.accMoves[i]=0;				  /* how many acepted moves */
+    sresTotal.trialMoves[i]=0;				  /* how many trial moves */
+    sresTotal.accTrialMoves[i]=0;			  /* hom many of the trial moves we are abel to try */
+    sresTotal.accMoves[i]=0;				  /* how many acepted moves */
+
   }
   sres.totAccTrialMoves=0;
+  sresTotal.totAccTrialMoves=0;
 
   part=malloc(pos.nAtoms*sizeof(int));
 
@@ -136,7 +141,7 @@ int mcSimulation(struct systemPos pos,struct parameters *par,struct simuPar *sim
   reinitWwwPotAfterStep(par,pos,1); /*make sure that wwwPot properly initialized*/
 
   startTime=time(NULL);
-  while((par->kT=getKT(sres.totAccTrialMoves,pos.nAtoms))>=0.0){ /* while we are in the annealing schedule */
+  while((par->kT=getKT(sresTotal.totAccTrialMoves,pos.nAtoms))>=0.0){ /* while we are in the annealing schedule */
     int error;
     int mcStep;
     /* let chose mcStep */
@@ -380,11 +385,13 @@ void makeMove(struct systemPos pos,struct parameters *par,int accepted,double po
      reinitWwwAfterBondChange(par,pos);
      reinitWwwPotAfterStep(par,pos,1);
       
-     MPI_Reduce(&steps,&totSteps,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD); 
-     MPI_Reduce(&sres.totAccTrialMoves,&sresTotal.totAccTrialMoves,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD); 
-     MPI_Reduce(&(sres.trialMoves[0]),&(sresTotal.trialMoves[0]),6,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD); 
-     MPI_Reduce(&(sres.accTrialMoves[0]),&(sresTotal.accTrialMoves[0]),6,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD); 
-     MPI_Reduce(&(sres.accMoves[0]),&(sresTotal.accMoves[0]),6,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD); 
+     //make these available on all ranks, sresTotal.totAccTrialMoves may be
+     //the only one that has to be
+     MPI_Allreduce(&steps,&totSteps,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD); 
+     MPI_Allreduce(&sres.totAccTrialMoves,&sresTotal.totAccTrialMoves,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD); 
+     MPI_Allreduce(&(sres.trialMoves[0]),&(sresTotal.trialMoves[0]),6,MPI_INT,MPI_SUM,MPI_COMM_WORLD); 
+     MPI_Allreduce(&(sres.accTrialMoves[0]),&(sresTotal.accTrialMoves[0]),6,MPI_INT,MPI_SUM,MPI_COMM_WORLD); 
+     MPI_Allreduce(&(sres.accMoves[0]),&(sresTotal.accMoves[0]),6,MPI_INT,MPI_SUM,MPI_COMM_WORLD); 
 
      
      if(rank==0) {

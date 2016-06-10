@@ -30,9 +30,11 @@ On a standard unix machine the code should compile by running make in
 the src folder. One can edit the Makefile if it does not
 compile. 
 
-There is also a naive and not-very-well-tested parallel version that
-one can enable in the makefile; scalability is probably limited to a
-node or so.
+There is also a parallel version that one can enable in the makefile. It
+performs in parallel multiple trial steps, and picks randomly among the
+accepted ones. At higher temperatures some accepted steps are thus not taken,
+and you may wish to slightly increase anneal length in main.par to balance
+this out if a larger numbers of processes are in use.
 
 
 ## Usage:

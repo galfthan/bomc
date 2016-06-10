@@ -1,44 +1,63 @@
-// Tolerance values
- full_tolerance 1e-7
- part_tolerance 1e-7
+//------------ Full/part-system CG schedules -------------
 
+ //initPart_doInitPart: Do initial part-of-system CG optimization, before conrinuing with
+ // part-of-system or full-system CG
+ initPart_doInitPart 1
+ // initPart_doPartCg:  After doing the initial partial Cg optimization (if initPart_doInitPart==1),
+ // should we continue with the partial scheme, growing part larger?
+ // Should be = !(initPart_doFullCg)
+ initPart_doPartCg  0
+ // initPart_doPartCg:  After doing the initial partial Cg optimization (if initPart_doInitPart==1),
+ // should we continue doing full system CG? Slower but more accurate. 
+ // Should be = !(initPart_doPartCg)
+ initPart_doFullCg  1
+
+ //Part growing scheme for  initially-local-part-of-system-cg
+ initPart_part_enlargeInterval 3
+ initPart_part_enlargements 8
+ initPart_part_enlTreshold 0.0000001
+
+ //Part growing scheme for  local-part-of-system-cg
  part_enlargeInterval 1
  part_enlargements 1
  part_enlTreshold 0.000001
 
 
- initPart_doInitPart 1
- initPart_doPartCg  0
- initPart_doFullCg  1
- initPart_part_enlargeInterval 3
- initPart_part_enlargements 8
- initPart_part_enlTreshold 0.0000001
 
-
-//is the CG minimization allowed to be adaptive (full 1D minimization is not always done)
-
+ // ----------- CG parameters -----------------
+ //is the CG minimization allowed to be adaptive (full 1D minimization is not always done)
  full_allowAdaptive         0
  part_allowAdaptive         0
  initpartpart_allowAdaptive 0
 
 
-
-// parameters for optimization
-
+ //full_optim_startIteration: How many CG iterations are done before early
+ //cancellation CG is allowed to be done (if full_optim_on == 1) 
  full_optim_startIteration 2
 
+ //Do early cancelation of full system CG?
  full_optim_on 1
+ //Do early cancelation of local-part-of-system CG?
  part_optim_on 1
+ //Do early cancelation of initial local-part-of-system CG?
  initPart_part_optim_on 1	
 
+ //Initial values of _c parameters that are used to estimate final pot value
+ //for early cancellation
  full_optim_c 5e-5
  part_optim_c  2e-5
  initPart_part_optim_c  5e-5
 
+ //How often _c parameters are automatically adjusted/corrected
  full_optim_checkInterval 1000000
  part_optim_checkInterval 1000000
  initPart_part_optim_checkInterval 100000
 
  
+// Tolerance values
+ full_tolerance 1e-7
+ part_tolerance 1e-7
+
 
  
+

@@ -291,9 +291,13 @@ void makeMove(struct systemPos pos,struct parameters *par,int accepted,double po
   MPI_Status status;
   MPI_Status status2;
   int flag;
+  int nAccepted=0;
+  
   int rank,totp;
   static int *accVect;
   static int *accVectRes;
+  static MPI_Request *sendRequests;
+  
   int chosenRank;
   int i,j;
   static int firsttime=1;
@@ -311,83 +315,82 @@ void makeMove(struct systemPos pos,struct parameters *par,int accepted,double po
   if(firsttime){
     accVect=malloc(sizeof(int)*totp); /*this vector will tell us which processors have made an accepted step*/
     accVectRes=malloc(sizeof(int)*totp); /*this is the reuslt when we sum all the accVEcts in all processors*/
+    sendRequests=malloc(sizeof(MPI_Request) * totp);
     firsttime=0;
   }
-   
 
-  MPI_Iprobe(MPI_ANY_SOURCE,2,MPI_COMM_WORLD,&flag,&status); /*probe if somebody has sent a message, i.e. if a step has been accepted*/
-  
-  if(flag){
-    int dummy;
-    MPI_Recv(&dummy,1,MPI_INT,status.MPI_SOURCE,2,MPI_COMM_WORLD,&status2); /*clear away recvs*/
+
+  if(accepted){
+     /*accepted, send non-blocking notification to other ranks and self to
+      * break computational loops that are still in progress*/
+     int dummy=1;
+     j=0;
+     for(i = 0 ; i < totp ; i++){
+        MPI_Isend(&dummy,1,MPI_INT,i,2,MPI_COMM_WORLD,&(sendRequests[j++]));
+     }
   }
-  else if(accepted){ /*accepted and no one else has yet been acepted, make a send so that they also stop*/
-    int dummy=1,i;
-    for(i=0;i<totp;i++){
-      if(i==rank) continue;
-      MPI_Send(&dummy,1,MPI_INT,i,2,MPI_COMM_WORLD);
-    }
+
+  /*let's see who has been accepted*/
+  for(i=0;i<totp;i++){
+     accVect[i]=0;
+     accVectRes[i]=0;     
+  }
+  accVect[rank]=accepted;
+  MPI_Reduce(accVect,accVectRes,totp,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+
+    
+  /*rank=0 chooses the accepted step*/  
+  if(rank==0){
+     nAccepted=0;     
+     /*first we change the format of accVect if totp=4 and 2 and 3 had
+      * accepted steps then
+      accvect = 0 1 1 0  => 2 3 - - */
+     for(i=0;i<totp;i++)
+        if(accVectRes[i]){
+           accVectRes[nAccepted++] = i;
+        }
+     if(nAccepted!=0)
+        chosenRank=accVectRes[(int)(randNum(2) * nAccepted) % nAccepted ];
+     /*we take on random one of the chosen events*/
+     else
+        chosenRank=-1;
   }
   
-  if(flag || accepted) { /*somebody has been acceepted*/
-    for(i=0;i<totp;i++){
-      accVect[i]=0;
-      accVectRes[i]=0;
-    }
-    accVect[rank]=accepted;
-    
-    MPI_Reduce(accVect,accVectRes,totp,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD); /*sum the total acceptance vector at rank=0*/
-    
+  MPI_Bcast(&nAccepted,1,MPI_INT,0,MPI_COMM_WORLD);    
+  MPI_Bcast(&chosenRank,1,MPI_INT,0,MPI_COMM_WORLD);
+  /*send to everybody who was chosen*/
 
-    if(rank==0){ /*rank=0 chooses the accepted step*/
-      j=0;      
-      /*first we change the format of accVect if totp=4 and 2 and 3 had accepted steps then
-	accvect = 0 1 1 0  => 2 3 - - */
-      for(i=0;i<totp;i++)
-	if(accVectRes[i]){
-	  accVectRes[j]=i;
-	  j++;
-	}
-      if(j!=0)
-	chosenRank=accVectRes[(int)(randNum(2)*j)]; /*we take on random one of the chosen events*/
-      else
-	chosenRank=-1;
-    }
-    
-    MPI_Bcast(&chosenRank,1,MPI_INT,0,MPI_COMM_WORLD); /*send to everybody who was chosen*/
+  if(nAccepted>0) {
+     if(chosenRank>totp-1)
+        printf("Error on %d? chosenrank %d  tot is %d\n", rank, chosenRank,  nAccepted);
+        
+     MPI_Barrier(MPI_COMM_WORLD);
 
-    if(chosenRank==-1 ){ /*some error happened (bugs...) when we chose the processor, it actuallly wasnt accepted*/
-      printf("error: None accepted rank:%d chosenrank=%d\n",rank,chosenRank);
-      restoreState(pos);
-      reinitWwwPotAfterStep(par,pos,0); 
-    }
-    
-    else{
-      accSteps++;
-      MPI_Bcast(par->box,3,MPI_DOUBLE,chosenRank,MPI_COMM_WORLD);
-      MPI_Bcast(pos.x,3*pos.nAtoms,MPI_DOUBLE,chosenRank,MPI_COMM_WORLD);
-      MPI_Bcast(pos.enPot,pos.nAtoms,MPI_DOUBLE,chosenRank,MPI_COMM_WORLD);
-      MPI_Bcast(blist->head,blist->arraySize,MPI_INT,chosenRank,MPI_COMM_WORLD);
-      MPI_Bcast(&potVal,1,MPI_DOUBLE,chosenRank,MPI_COMM_WORLD);
-      *oldPotVal=potVal;
+     accSteps++;
+     MPI_Bcast(par->box,3,MPI_DOUBLE,chosenRank,MPI_COMM_WORLD);
+     MPI_Bcast(pos.x,3*pos.nAtoms,MPI_DOUBLE,chosenRank,MPI_COMM_WORLD);
+     MPI_Bcast(pos.enPot,pos.nAtoms,MPI_DOUBLE,chosenRank,MPI_COMM_WORLD);
+     MPI_Bcast(blist->head,blist->arraySize,MPI_INT,chosenRank,MPI_COMM_WORLD);
+     MPI_Bcast(&potVal,1,MPI_DOUBLE,chosenRank,MPI_COMM_WORLD);
+     *oldPotVal=potVal;
+     
+     setSystemSize(par);
+     enforcePeriodicity(pos,par);
+     backupState(pos);
+     reinitWwwAfterBondChange(par,pos);
+     reinitWwwPotAfterStep(par,pos,1);
       
-      setSystemSize(par);
-      enforcePeriodicity(pos,par);
-      backupState(pos);
-      reinitWwwAfterBondChange(par,pos);
-      reinitWwwPotAfterStep(par,pos,1);
-      
-      MPI_Reduce(&steps,&totSteps,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD); 
-      MPI_Reduce(&sres.totAccTrialMoves,&sresTotal.totAccTrialMoves,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD); 
-      MPI_Reduce(&(sres.trialMoves[0]),&(sresTotal.trialMoves[0]),6,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD); 
-      MPI_Reduce(&(sres.accTrialMoves[0]),&(sresTotal.accTrialMoves[0]),6,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD); 
-      MPI_Reduce(&(sres.accMoves[0]),&(sresTotal.accMoves[0]),6,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD); 
+     MPI_Reduce(&steps,&totSteps,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD); 
+     MPI_Reduce(&sres.totAccTrialMoves,&sresTotal.totAccTrialMoves,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD); 
+     MPI_Reduce(&(sres.trialMoves[0]),&(sresTotal.trialMoves[0]),6,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD); 
+     MPI_Reduce(&(sres.accTrialMoves[0]),&(sresTotal.accTrialMoves[0]),6,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD); 
+     MPI_Reduce(&(sres.accMoves[0]),&(sresTotal.accMoves[0]),6,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD); 
 
-      
-      if(rank==0) {
+     
+     if(rank==0) {
 	int dBonds=0;
 	for(i=0;i<pos.nAtoms;i++)
-	  dBonds+=blist->danglBonds[i];
+           dBonds+=blist->danglBonds[i];
 	printf("%6d accsteps  tot: %d/%d= %.2g  s %d/%d= %.2g bb %d/%d= %.2g bc %d/%d= %.2g bd %d/%d= %.2g v %d/%d= %.2g od %d/%d= %.2g\n" 
 	       ,accSteps,accSteps,totSteps,(double)accSteps/totSteps
 	       ,sresTotal.accMoves[0],sresTotal.accTrialMoves[0],sresTotal.accMoves[0]/(1e-10+sresTotal.accTrialMoves[0])
@@ -399,17 +402,34 @@ void makeMove(struct systemPos pos,struct parameters *par,int accepted,double po
     	
 	printf("%6d dens: %g pot: %.10g kT: %gev %g db r: %d acc: %d/%d\n"
 	       ,accSteps,(double)pos.nAtoms/par->volume,potVal*TOEV/pos.nAtoms
-	       ,par->kT*TOEV,(double)dBonds/pos.nAtoms,chosenRank,j,totp); 	
+	       ,par->kT*TOEV,(double)dBonds/pos.nAtoms,chosenRank,nAccepted,totp); 	
 	fflush(stdout);
       }
-    }
   }
-  
   /*no accepted move..*/
   else {
     restoreState(pos);
     reinitWwwPotAfterStep(par,pos,0);
   }
+  
+  /*Clear all pending sends*/
+  /*probe if somebody has sent a message, i.e. if a step has been accepted*/  
+  MPI_Iprobe(MPI_ANY_SOURCE,2,MPI_COMM_WORLD,&flag,&status);
+  while(flag){
+     int dummy;
+     //clear receive
+     MPI_Recv(&dummy, 1, MPI_INT, status.MPI_SOURCE, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE); 
+     //probe if there are further receives
+     MPI_Iprobe(MPI_ANY_SOURCE, 2, MPI_COMM_WORLD, &flag, &status); 
+  }
+
+  
+  /*wait for sends to finnish*/
+  if(accepted){ 
+     MPI_Waitall(totp, sendRequests, MPI_STATUSES_IGNORE);
+  }
+
+
   
 }
 #endif
